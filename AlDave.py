@@ -108,8 +108,6 @@ class App(tk.Tk):
             self.password.set('')
             self.username.set('')
 
-
-
     def BckTo(self):
         self.frame.pack_forget()
         self.frame_btn.pack(expand='yes')
