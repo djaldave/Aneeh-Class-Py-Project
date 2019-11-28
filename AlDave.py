@@ -385,34 +385,54 @@ class MainFrame(tk.Tk):
             self.last_focus = _iid
 
     def update(self):
+        cnt = 0
+        cursor.execute(select_all)
+        res = cursor.fetchall()
+        data = [[i[1], i[7]] for i in res]
+        u = False
         user = self.username_reg_var.get().strip()
         fn = self.fn_reg_var.get().strip()
         ln = self.ln_reg_var.get().strip()
         cn = self.cn_reg_var.get().strip()
         usertype = self.userType.get()
         status = self.status.get()
+        for i in data:
+            if user in i:
+                cnt = cnt + 1
+                if i[0] == user:
+                    u = True
+                    cnt = 0
+                    break
+
+        print(cnt)
         if user == '' or fn == '' or ln == '' or cn == '':
             mb.showerror("", "please fill all fields")
         else:
             try:
-                sql = f"update tbluser set Uname='{user}', Fname='{fn}', Lname='{ln}', Contact_no={int(cn)}, " \
-                      f"UserType_Id='{usertype}', active={status}  where User_Id={s_user_id}"
-                print(sql)
-                cursor.execute(sql)
-                db.commit()
-                popupwindow.destroy()
 
-                ##
-                curItem = self.tree1.focus()
-                sql = f"select User_Id, uname, fname, lname, contact_no, usertype_id, active from tbluser" \
-                      f" where User_Id='{s_user_id}'"
-                cursor.execute(sql)
-                res = cursor.fetchone()
-                usr_tp = 'admin' if res[5] == 1 else 'user'
-                act = 'active' if res[6] == 1 else 'inactive'
-                self.tree1.delete(curItem)
-                self.tree1.insert('', curItem, curItem, text="", values=(res[0], user, fn, ln, cn
-                                                                         , usr_tp, act))
+                if cnt == 0:
+                    sql = f"update tbluser set Uname='{user}', Fname='{fn}', Lname='{ln}', Contact_no={int(cn)}, " \
+                          f"UserType_Id='{usertype}', active={status}  where User_Id={s_user_id}"
+                    print(sql)
+                    cursor.execute(sql)
+                    db.commit()
+                    popupwindow.destroy()
+
+                    ##
+                    curItem = self.tree1.focus()
+                    sql = f"select User_Id, uname, fname, lname, contact_no, usertype_id, active from tbluser" \
+                          f" where User_Id='{s_user_id}'"
+                    cursor.execute(sql)
+                    res = cursor.fetchone()
+                    usr_tp = 'admin' if res[5] == 1 else 'user'
+                    act = 'active' if res[6] == 1 else 'inactive'
+                    self.tree1.delete(curItem)
+                    self.tree1.insert('', curItem, curItem, text="", values=(res[0], user, fn, ln, cn
+                                                                            , usr_tp, act))
+                elif cnt > 0:
+                    mb.showerror("", "username al")
+                else:
+                    mb.showerror("", "username must br unique")
             except:
                 mb.showerror("Error Found!", "Contact number contain number only")
 
@@ -449,11 +469,11 @@ class MainFrame(tk.Tk):
         cn_reg = ttk.Label(wrap, text='Contact Number', style='my3.TLabel')
         # entry area
         usrname_reg_en = ttk.Entry(wrap, textvariable=self.username_reg_var, style='my3.TEntry')
-        pass_reg_en = ttk.Entry(wrap, textvariable=self.username_reg_var, style='my3.TEntry')
+        pass_reg_en = ttk.Entry(wrap, textvariable=self.password_reg_var, style='my3.TEntry')
         fn_reg_en = ttk.Entry(wrap, textvariable=self.fn_reg_var, style='my3.TEntry')
         ln_reg_en = ttk.Entry(wrap, textvariable=self.ln_reg_var, style='my3.TEntry')
         cn_reg_en = ttk.Entry(wrap, textvariable=self.cn_reg_var, style='my3.TEntry')
-        registerBtn_go = ttk.Button(wrap, text='Submit', cursor='hand2', style='my2.TButton')
+        registerBtn_go = ttk.Button(wrap, text='Submit', cursor='hand2', style='my2.TButton', command=self.submit)
         registerBackTo = ttk.Button(wrap, text='Cancel', cursor='hand2', style='my2.TButton', command=cancel_edit_add)
 
         # radio button layout area
@@ -515,7 +535,41 @@ class MainFrame(tk.Tk):
         App()
 
     def submit(self):
-        pass
+        cursor.execute(select_all)
+        res = cursor.fetchall()
+        data = [[i[1]] for i in res]
+        unique = True
+        user = self.username_reg_var.get().strip()
+        pas_s = self.password_reg_var.get().strip()
+        fn = self.fn_reg_var.get().strip()
+        ln = self.ln_reg_var.get().strip()
+        cn = self.cn_reg_var.get().strip()
+        usertype = self.userType.get()
+        status = self.status.get()
+        for row in data:
+            if row[0] == user:
+                unique = False
+        if unique:
+            if user == '' or fn == '' or ln == '' or cn == '' or pas_s == '':
+                mb.showerror("", "please fill all fields")
+            else:
+                try:
+                    sql = f"insert into tbluser (Uname, Password, Fname, Lname, Contact_no, UserType_Id, active )" \
+                          f"values ('{user}', '{pas_s}', '{fn}','{ln}', '{cn}', '{usertype}', '{status}')"
+                    print(sql)
+                    cursor.execute(sql)
+                    db.commit()
+
+                    ##
+                    ok = mb.showinfo("", "Successfully Added")
+                    if ok:
+                        self.tree1.delete(*self.tree1.get_children())
+                        Display_Data(self.tree1)
+                        add_Frame.destroy()
+                except:
+                    mb.showerror("Error Found!", "Contact number contain number only")
+        else:
+            mb.showerror("", "Username is already taken please try again")
 
 
 if __name__ == "__main__":
