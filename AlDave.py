@@ -32,39 +32,15 @@ def user_admin(username, password):
         usrtype = userType[0][0]
         act = userType[0][1]
         if usrtype == 1 and act == 1:
-            ok = mb.showinfo("", "Admin")
-            if ok:
-                print("admin")
+            ok = mb.showinfo("", "Welcome Admin")
         elif usrtype == 2 and act == 1:
-            ok = mb.showinfo("", "User")
+            ok = mb.showinfo("", "User not allowed")
             if ok:
                 print("User")
         else:
             mb.showwarning('', "Account is inactive")
     except:
         mb.showerror("Error in Sql", "Incorrect Username or Password")
-
-
-def register_new_user(un, pd, fn, ln, cn):
-    try:
-        sql = 'select * from tbluser'
-        cursor.execute(sql)
-        res = cursor.fetchall()
-        userType = [True for i in res if un == i[1]]
-        if not userType:
-            sql = f"insert into tbluser (Uname, Password, Fname, Lname, Contact_no, UserType_Id, active) values ('{un}', '{pd}', '{fn}', '{ln}', {cn}, '{2}', {'0'})"
-            try:
-                # execute the command
-                cursor.execute(sql)
-                # commit changes in the database
-                db.commit()
-            except:
-                # roll back in case there's any error
-                db.rollback()
-        else:
-            mb.showwarning("", "Username is already taken")
-    except:
-        mb.showerror("", "there's error in (register_new_user)")
 
 
 # validations
@@ -80,14 +56,6 @@ class App(tk.Tk):
         self.username = tk.StringVar()
         self.password = tk.StringVar()
         # for usertype variable / radio button
-        self.userType = tk.IntVar()
-        self.userType.set(2)
-        # for register variable
-        self.username_reg_var = tk.StringVar()
-        self.password_reg_var = tk.StringVar()
-        self.fn_reg_var = tk.StringVar()
-        self.ln_reg_var = tk.StringVar()
-        self.cn_reg_var = tk.StringVar()
 
         # calling Center_Window method and title
         self.Center_window(250, 150)
@@ -104,12 +72,9 @@ class App(tk.Tk):
 
         # first Login
         self.loginBtn = ttk.Button(self.frame_btn, text='Login', cursor='hand2', command=self.Login, style='my.TButton')
-        self.registerBtn = ttk.Button(self.frame_btn, text='Register', cursor='hand2', style='my.TButton',
-                                      command=self.Register)
 
         # layout for frame_btn and its child
         self.loginBtn.pack()
-        self.registerBtn.pack(pady=5)
         self.frame_btn.pack(expand='yes')
 
         # frame for login
@@ -120,28 +85,6 @@ class App(tk.Tk):
         self.psswd_en = ttk.Entry(self.frame, textvariable=self.password, show="*")
         self.loginBtn_go = ttk.Button(self.frame, text='Login', cursor='hand2', command=self.Login_auth)
         self.backTo = ttk.Button(self.frame, text='Back', cursor='hand2', command=self.BckTo)
-
-        # frame for register
-        # radio button area
-        self.rbAdmin = ttk.Radiobutton(self.frame_register, text='Admin', variable=self.userType,
-                                       value=1, state='disabled')
-        self.rbUser = ttk.Radiobutton(self.frame_register, text='User', variable=self.userType, value=2)
-        # separator
-        self.sep = ttk.Label(self.frame_register, text='-----------------User Only--------------')
-        # label area
-        self.usrname_reg = ttk.Label(self.frame_register, text='Username')
-        self.psswd_reg = ttk.Label(self.frame_register, text='Password')
-        self.fn_reg = ttk.Label(self.frame_register, text='First Name')
-        self.ln_reg = ttk.Label(self.frame_register, text='Last Name')
-        self.cn_reg = ttk.Label(self.frame_register, text='Contact Number')
-        # entry area
-        self.usrname_reg_en = ttk.Entry(self.frame_register, textvariable=self.username_reg_var)
-        self.psswrd_reg_en = ttk.Entry(self.frame_register, textvariable=self.password_reg_var)
-        self.fn_reg_en = ttk.Entry(self.frame_register, textvariable=self.fn_reg_var)
-        self.ln_reg_en = ttk.Entry(self.frame_register, textvariable=self.ln_reg_var)
-        self.cn_reg_en = ttk.Entry(self.frame_register, textvariable=self.cn_reg_var)
-        self.registerBtn_go = ttk.Button(self.frame_register, text='Signup', cursor='hand2', command=self.Register_auth)
-        self.registerBackTo = ttk.Button(self.frame_register, text='Back', cursor='hand2', command=self.BckTo1)
 
     def Center_window(self, width, height):
         screen_width = self.winfo_screenwidth()
@@ -161,30 +104,6 @@ class App(tk.Tk):
         self.backTo.grid(row=2, column=0, padx=7)
         self.frame.pack(expand='yes', ipady=5, ipadx=15)
 
-    def Register(self):
-        self.frame_btn.pack_forget()
-        self.Center_window(300, 320)  # set the size of the frame
-        # radio button layout area
-        self.rbAdmin.grid(row=0, column=1, ipady='5', padx='5')
-        self.rbUser.grid(row=0, column=0, ipady='5', padx='5')
-        # line separator
-        self.sep.grid(row=1, column=0, columnspan=2)
-        # label layout
-        self.usrname_reg.grid(row=2, column=0, ipady='5', padx='5', sticky='e')
-        self.psswd_reg.grid(row=3, column=0, ipady='5', padx='5', sticky='e')
-        self.fn_reg.grid(row=4, column=0, ipady='5', padx='5', sticky='e')
-        self.ln_reg.grid(row=5, column=0, ipady='5', padx='5', sticky='e')
-        self.cn_reg.grid(row=6, column=0, ipady='5', padx='5', sticky='e')
-        # entry layout
-        self.usrname_reg_en.grid(row=2, column=1, pady='5', padx='5')
-        self.psswrd_reg_en.grid(row=3, column=1, pady='5', padx='5')
-        self.fn_reg_en.grid(row=4, column=1, pady='5', padx='5')
-        self.ln_reg_en.grid(row=5, column=1, pady='5', padx='5')
-        self.cn_reg_en.grid(row=6, column=1, pady='5', padx='5')
-        self.registerBtn_go.grid(row=7, column=1, pady='5', padx='5')
-        self.registerBackTo.grid(row=7, column=0, pady='5', padx='5')
-        self.frame_register.pack(expand='yes')
-
     def Login_auth(self):
         usr = self.username.get().strip()
         pss = self.password.get().strip()
@@ -192,39 +111,13 @@ class App(tk.Tk):
             mb.showerror("Input", "No input")
         else:
             user_admin(usr, pss)
+            self.destroy()
+            MainFrame()
             self.password.set('')
             self.username.set('')
 
-    def Register_auth(self):
-        un = self.username_reg_var.get().strip()
-        pd = self.password_reg_var.get().strip()
-        fn = self.fn_reg_var.get().strip()
-        ln = self.ln_reg_var.get().strip()
-        cn = self.cn_reg_var.get().strip()
-        if un == '' and pd == '' and fn == '' and ln == '':
-            mb.showerror("", "No input")
-        else:
-            try:
-                register_new_user(un, pd, fn, ln, int(cn))
-                ok = mb.showinfo("", "Successfully Added")
-                self.username_reg_var.set('')
-                self.password_reg_var.set('')
-                self.fn_reg_var.set('')
-                self.ln_reg_var.set('')
-                self.cn_reg_var.set('')
-                if ok:
-                    self.BckTo1()
-            except:
-                mb.showerror("", "number input only for contact number")
-
     def BckTo(self):
-        self.Center_window(250, 150)
         self.frame.pack_forget()
-        self.frame_btn.pack(expand='yes')
-
-    def BckTo1(self):
-        self.Center_window(250, 150)
-        self.frame_register.pack_forget()
         self.frame_btn.pack(expand='yes')
 
 
@@ -373,7 +266,7 @@ class MainFrame(tk.Tk):
         self.tree1.pack(expand=0, fill='both')
 
         # top attributes
-        self.add_user_btn2 = ttk.Button(self.top, text='Logout', style='my1.TButton')
+        self.add_user_btn2 = ttk.Button(self.top, text='Logout', style='my1.TButton', command=self.Logout)
 
         # layout attributes
 
@@ -617,6 +510,13 @@ class MainFrame(tk.Tk):
         Display_Data(self.tree1)
         self.search_en_var.set('')
 
+    def Logout(self):
+        self.destroy()
+        App()
+
+    def submit(self):
+        pass
+
 
 if __name__ == "__main__":
     dbError = True
@@ -627,6 +527,6 @@ if __name__ == "__main__":
                                        "\nplease check (db_connect)")
         dbError = False
     if dbError:
-        a = MainFrame()
+        a = App()
         a.mainloop()
         db.close()
