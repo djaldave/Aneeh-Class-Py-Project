@@ -353,10 +353,12 @@ class MainFrame(tk.Tk):
         for row in treeInsertVal:
             usr_tp = 'admin' if row[6] == 1 else 'user'
             act = 'active' if row[7] == 1 else 'inactive'
-            if row[7] == 1:
+            if cnt % 2 == 0:
                 self.tree1.insert('', "end", cnt, text="",
                                   values=(row[0], row[1], row[3], row[4], row[5], usr_tp, act))
-
+            else:
+                self.tree1.insert('', "end", cnt, text="",
+                                  values=(row[0], row[1], row[3], row[4], row[5], usr_tp, act))
             cnt = cnt + 1
 
         # (main) attributes frame layout
