@@ -228,6 +228,21 @@ class App(tk.Tk):
         self.frame_btn.pack(expand='yes')
 
 
+def Display_Data(self):
+    cursor.execute(select_all)
+    res = cursor.fetchall()
+    treeInsertVal = [[i[0], i[1], i[2], i[3], i[4], i[5], i[6], i[7]] for i in res]
+    # inserting value
+    cnt = 0
+    for row in treeInsertVal:
+        usr_tp = 'admin' if row[6] == 1 else 'user'
+        act = 'active' if row[7] == 1 else 'inactive'
+        if row[7] != 3:
+            self.insert('', "end", cnt, text="",
+                        values=(row[0], row[1], row[3], row[4], row[5], usr_tp, act))
+        cnt = cnt + 1
+
+
 def Center_window_sub(s, width, height):
     screen_width = s.winfo_screenwidth()
     screen_height = s.winfo_screenheight()
@@ -254,7 +269,7 @@ class MainFrame(tk.Tk):
         self.title("Al Dave Program")
 
         # variables
-        self.search_en = tk.StringVar()
+        self.search_en_var = tk.StringVar()
         self.username_reg_var = tk.StringVar()
         self.password_reg_var = tk.StringVar()
         self.fn_reg_var = tk.StringVar()
@@ -296,14 +311,13 @@ class MainFrame(tk.Tk):
                                        command=self.Add_new_user)
         self.add_edit_btn = ttk.Button(self.sidebar, text='Edit', style='my.TButton', cursor='hand2',
                                        command=self.edit_auth)
-        self.add_changePass_btn = ttk.Button(self.sidebar, text='Password', style='my.TButton', cursor='hand2')
 
         # main attributes
         # top
-        self.m_reset_btn = ttk.Button(self.m_top, text='Reset', style='my.TButton', )
+        self.m_reset_btn = ttk.Button(self.m_top, text='Clear', style='my.TButton', command=self.Clear)
         self.m_delete_btn = ttk.Button(self.m_top, text='Delete', style='my.TButton', command=self.delete)
-        self.m_search_btn = ttk.Button(self.m_top, text='Search', style='my.TButton', )
-        self.m_search_en = ttk.Entry(self.m_top, textvariable=self.search_en, font=('Helvetica', 12))
+        self.m_search_btn = ttk.Button(self.m_top, text='Search', style='my.TButton', command=self.Search)
+        self.m_search_en = ttk.Entry(self.m_top, textvariable=self.search_en_var, font=('Helvetica', 12))
 
         # body
         # Scrollbar
@@ -345,21 +359,8 @@ class MainFrame(tk.Tk):
         self.tree1.column('#6', stretch=tk.NO, minwidth=0, width=130)
         self.tree1.column('#7', stretch=tk.NO, minwidth=0, width=130)
 
-        cursor.execute(select_all)
-        res = cursor.fetchall()
-        treeInsertVal = [[i[0], i[1], i[2], i[3], i[4], i[5], i[6], i[7]] for i in res]
-        # inserting value
-        cnt = 0
-        for row in treeInsertVal:
-            usr_tp = 'admin' if row[6] == 1 else 'user'
-            act = 'active' if row[7] == 1 else 'inactive'
-            if cnt % 2 == 0:
-                self.tree1.insert('', "end", cnt, text="",
-                                  values=(row[0], row[1], row[3], row[4], row[5], usr_tp, act))
-            else:
-                self.tree1.insert('', "end", cnt, text="",
-                                  values=(row[0], row[1], row[3], row[4], row[5], usr_tp, act))
-            cnt = cnt + 1
+        ##################################
+        Display_Data(self.tree1)
 
         # (main) attributes frame layout
         # top
@@ -373,14 +374,12 @@ class MainFrame(tk.Tk):
 
         # top attributes
         self.add_user_btn2 = ttk.Button(self.top, text='Logout', style='my1.TButton')
-        self.add_pos_btn2 = ttk.Button(self.top, text='POS', style='my1.TButton')
 
         # layout attributes
 
         # sidebar layout
         self.add_user_btn.pack(pady=10)
         self.add_edit_btn.pack(pady=10)
-        self.add_changePass_btn.pack(pady=10)
 
         # main layout
         self.m_reset_btn.pack()
@@ -390,7 +389,6 @@ class MainFrame(tk.Tk):
 
         # top layout
         self.add_user_btn2.pack(side='right', padx=15)
-        self.add_pos_btn2.pack(side='left', padx=15)
 
         # frame layout
         # top frame
@@ -590,8 +588,35 @@ class MainFrame(tk.Tk):
         wrap.pack(expand=1, fill='both', padx=20, pady=20)
 
     def delete(self):
-        curItem = self.tree1.focus()
-        self.tree1.delete(curItem)
+        try:
+            curItem = self.tree1.focus()
+            aya = self.tree1.item(curItem)
+            index = aya['values'][0]
+            ok = mb.askyesno("", "Are you sure do you want to delete?")
+            if ok:
+                sql = f"update tbluser set active=3 where User_Id={index}"
+                cursor.execute(sql)
+                db.commit()
+                curItem = self.tree1.focus()
+                self.tree1.delete(curItem)
+        except:
+            mb.showinfo("", "Please select row")
+
+    def Search(self):
+        if self.search_en_var.get() != "":
+            self.tree1.delete(*self.tree1.get_children())
+            sql = f"SELECT * FROM `tbluser` WHERE `uname` LIKE '%{self.search_en_var.get()}%'"
+            cursor.execute(sql)
+            print(sql)
+            fetch = cursor.fetchall()
+            for data in fetch:
+                self.tree1.insert('', 'end', values=data)
+
+    def Clear(self):
+        self.tree1.delete(*self.tree1.get_children())
+        Display_Data(self.tree1)
+        self.search_en_var.set('')
+
 
 if __name__ == "__main__":
     dbError = True
