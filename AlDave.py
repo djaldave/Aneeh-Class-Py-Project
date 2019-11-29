@@ -153,6 +153,14 @@ def cancel_edit_add():
     add_Frame.destroy()
 
 
+def has_unique_username(username_reg_var, current_id):
+    sql = f"select * from tbluser where Uname='{username_reg_var}' and User_Id != '{current_id}' and active != 3"
+    cursor.execute(sql)
+    res = cursor.fetchall()
+    length = len(res)
+    return length == 0
+
+
 class MainFrame(tk.Tk):
     def __init__(self):
         super().__init__()
@@ -385,32 +393,19 @@ class MainFrame(tk.Tk):
             self.last_focus = _iid
 
     def update(self):
-        cnt = 0
-        cursor.execute(select_all)
-        res = cursor.fetchall()
-        data = [[i[1], i[7]] for i in res]
-        u = False
         user = self.username_reg_var.get().strip()
         fn = self.fn_reg_var.get().strip()
         ln = self.ln_reg_var.get().strip()
         cn = self.cn_reg_var.get().strip()
         usertype = self.userType.get()
         status = self.status.get()
-        for i in data:
-            if user in i:
-                cnt = cnt + 1
-                if i[0] == user:
-                    u = True
-                    cnt = 0
-                    break
-
-        print(cnt)
         if user == '' or fn == '' or ln == '' or cn == '':
             mb.showerror("", "please fill all fields")
         else:
             try:
-
-                if cnt == 0:
+                if not has_unique_username(user, s_user_id):
+                    mb.showerror("", "username must be unique")
+                else:
                     sql = f"update tbluser set Uname='{user}', Fname='{fn}', Lname='{ln}', Contact_no={int(cn)}, " \
                           f"UserType_Id='{usertype}', active={status}  where User_Id={s_user_id}"
                     print(sql)
@@ -428,11 +423,7 @@ class MainFrame(tk.Tk):
                     act = 'active' if res[6] == 1 else 'inactive'
                     self.tree1.delete(curItem)
                     self.tree1.insert('', curItem, curItem, text="", values=(res[0], user, fn, ln, cn
-                                                                            , usr_tp, act))
-                elif cnt > 0:
-                    mb.showerror("", "username al")
-                else:
-                    mb.showerror("", "username must br unique")
+                                                                             , usr_tp, act))
             except:
                 mb.showerror("Error Found!", "Contact number contain number only")
 
@@ -518,7 +509,7 @@ class MainFrame(tk.Tk):
     def Search(self):
         if self.search_en_var.get() != "":
             self.tree1.delete(*self.tree1.get_children())
-            sql = f"SELECT * FROM `tbluser` WHERE `uname` LIKE '%{self.search_en_var.get()}%'"
+            sql = f"SELECT * FROM `tbluser` WHERE `uname` LIKE '%{self.search_en_var.get()}%' and active != 3"
             cursor.execute(sql)
             print(sql)
             fetch = cursor.fetchall()
@@ -581,6 +572,6 @@ if __name__ == "__main__":
                                        "\nplease check (db_connect)")
         dbError = False
     if dbError:
-        a = App()
+        a = MainFrame()
         a.mainloop()
         db.close()
