@@ -23,24 +23,7 @@ def DbConnect():
 
 
 # to check if the user login is admin or not
-def user_admin(username, password):
-    try:  # try except
-        sql = f"select usertype_id, active from tbluser where uname = '{username}' and password = '{password}'"  # sql
-        cursor.execute(sql)  # execute the sql statement
-        result = cursor.fetchall()  # get the result
-        userType = [[i[0], i[1]] for i in result]
-        usrtype = userType[0][0]
-        act = userType[0][1]
-        if usrtype == 1 and act == 1:
-            ok = mb.showinfo("", "Welcome Admin")
-        elif usrtype == 2 and act == 1:
-            ok = mb.showinfo("", "User not allowed")
-            if ok:
-                print("User")
-        else:
-            mb.showwarning('', "Account is inactive")
-    except:
-        mb.showerror("Error in Sql", "Incorrect Username or Password")
+
 
 
 # validations
@@ -110,15 +93,38 @@ class App(tk.Tk):
         if usr == '' and pss == '':
             mb.showerror("Input", "No input")
         else:
-            user_admin(usr, pss)
-            self.destroy()
-            MainFrame()
+            self.user_admin(usr, pss)
+
             self.password.set('')
             self.username.set('')
 
     def BckTo(self):
         self.frame.pack_forget()
         self.frame_btn.pack(expand='yes')
+
+    def user_admin(self,username, password):
+        try:  # try except
+            sql = f"select usertype_id, active from tbluser where uname = '{username}' and password = '{password}'"  # sql
+            cursor.execute(sql)  # execute the sql statement
+            result = cursor.fetchall()  # get the result
+            userType = [[i[0], i[1]] for i in result]
+            usrtype = userType[0][0]
+            act = userType[0][1]
+            if usrtype == 1 and act == 1:
+                ok = mb.showinfo("", "Welcome Admin")
+                if ok:
+                    self.destroy()
+                    MainFrame()
+            elif usrtype == 2 and act == 1:
+                ok = mb.showinfo("", "User not allowed")
+                if ok:
+                    print("User")
+
+            else:
+                mb.showwarning('', "Account is inactive")
+                return False
+        except:
+            mb.showerror("Error in Sql", "Incorrect Username or Password")
 
 
 def Display_Data(self):
@@ -129,10 +135,10 @@ def Display_Data(self):
     cnt = 0
     for row in treeInsertVal:
         usr_tp = 'admin' if row[6] == 1 else 'user'
-        act = 'active' if row[7] == 1 else 'inactive'
-        if row[7] != 3:
+
+        if row[7] != 0:
             self.insert('', "end", cnt, text="",
-                        values=(row[0], row[1], row[3], row[4], row[5], usr_tp, act))
+                        values=(row[0], row[1], row[3], row[4], row[5], usr_tp))
         cnt = cnt + 1
 
 
@@ -248,17 +254,16 @@ class MainFrame(tk.Tk):
         self.tree1.heading('lname', text="Last Name", anchor=tk.W)
         self.tree1.heading('contact_no', text="Contact", anchor=tk.W)
         self.tree1.heading('usertype', text="User Type", anchor=tk.W)
-        self.tree1.heading('status', text="Status", anchor=tk.W)
 
         # tree column
         self.tree1.column('#0', stretch=tk.NO, minwidth=0, width=0)
-        self.tree1.column('#1', stretch=tk.NO, minwidth=0, width=100)
-        self.tree1.column('#2', stretch=tk.NO, minwidth=0, width=130)
-        self.tree1.column('#3', stretch=tk.NO, minwidth=0, width=130)
-        self.tree1.column('#4', stretch=tk.NO, minwidth=0, width=130)
-        self.tree1.column('#5', stretch=tk.NO, minwidth=0, width=130)
-        self.tree1.column('#6', stretch=tk.NO, minwidth=0, width=130)
-        self.tree1.column('#7', stretch=tk.NO, minwidth=0, width=130)
+        self.tree1.column('#1', stretch=tk.NO, minwidth=0, width=130)
+        self.tree1.column('#2', stretch=tk.NO, minwidth=0, width=140)
+        self.tree1.column('#3', stretch=tk.NO, minwidth=0, width=140)
+        self.tree1.column('#4', stretch=tk.NO, minwidth=0, width=140)
+        self.tree1.column('#5', stretch=tk.NO, minwidth=0, width=140)
+        self.tree1.column('#6', stretch=tk.NO, minwidth=0, width=140)
+
 
         ##################################
         Display_Data(self.tree1)
@@ -346,9 +351,7 @@ class MainFrame(tk.Tk):
         rbAdmin = ttk.Radiobutton(user_type, text='Admin', variable=self.userType,
                                   value=1)
         rbUser = ttk.Radiobutton(user_type, text='User', variable=self.userType, value=2)
-        active_r = ttk.Radiobutton(status, text='Enable', variable=self.status,
-                                   value=1)
-        inactive_r = ttk.Radiobutton(status, text='Disable', variable=self.status, value=0)
+
         #         # label area
         usrname_reg = ttk.Label(wrap, text='Username', style='my3.TLabel', )
         fn_reg = ttk.Label(wrap, text='First Name', style='my3.TLabel')
@@ -365,8 +368,7 @@ class MainFrame(tk.Tk):
         # radio button layout area
         rbAdmin.grid(row=0, column=1, ipady='3', padx='19')
         rbUser.grid(row=0, column=0, ipady='3', padx='42')
-        inactive_r.grid(row=0, column=0, ipady='3', padx='42')
-        active_r.grid(row=0, column=1, ipady='3', padx='4')
+
         # label layout
         usrname_reg.grid(row=2, column=0, ipady='5', padx='5', sticky='e')
         fn_reg.grid(row=4, column=0, ipady='5', padx='5', sticky='e')
@@ -398,7 +400,7 @@ class MainFrame(tk.Tk):
         ln = self.ln_reg_var.get().strip()
         cn = self.cn_reg_var.get().strip()
         usertype = self.userType.get()
-        status = self.status.get()
+
         if user == '' or fn == '' or ln == '' or cn == '':
             mb.showerror("", "please fill all fields")
         else:
@@ -407,7 +409,7 @@ class MainFrame(tk.Tk):
                     mb.showerror("", "username must be unique")
                 else:
                     sql = f"update tbluser set Uname='{user}', Fname='{fn}', Lname='{ln}', Contact_no={int(cn)}, " \
-                          f"UserType_Id='{usertype}', active={status}  where User_Id={s_user_id}"
+                          f"UserType_Id='{usertype}' where User_Id={s_user_id}"
                     print(sql)
                     cursor.execute(sql)
                     db.commit()
@@ -415,15 +417,15 @@ class MainFrame(tk.Tk):
 
                     ##
                     curItem = self.tree1.focus()
-                    sql = f"select User_Id, uname, fname, lname, contact_no, usertype_id, active from tbluser" \
+                    sql = f"select User_Id, uname, fname, lname, contact_no, usertype_id from tbluser" \
                           f" where User_Id='{s_user_id}'"
                     cursor.execute(sql)
                     res = cursor.fetchone()
                     usr_tp = 'admin' if res[5] == 1 else 'user'
-                    act = 'active' if res[6] == 1 else 'inactive'
+
                     self.tree1.delete(curItem)
                     self.tree1.insert('', curItem, curItem, text="", values=(res[0], user, fn, ln, cn
-                                                                             , usr_tp, act))
+                                                                             , usr_tp))
             except:
                 mb.showerror("Error Found!", "Contact number contain number only")
 
@@ -449,9 +451,7 @@ class MainFrame(tk.Tk):
         rbAdmin = ttk.Radiobutton(user_type, text='Admin', variable=self.userType,
                                   value=1)
         rbUser = ttk.Radiobutton(user_type, text='User', variable=self.userType, value=2)
-        active_r = ttk.Radiobutton(status, text='Enable', variable=self.status,
-                                   value=1)
-        inactive_r = ttk.Radiobutton(status, text='Disable', variable=self.status, value=0)
+
         #         # label area
         usrname_reg = ttk.Label(wrap, text='Username', style='my3.TLabel', )
         pass_reg = ttk.Label(wrap, text='Password', style='my3.TLabel', )
@@ -470,8 +470,7 @@ class MainFrame(tk.Tk):
         # radio button layout area
         rbAdmin.grid(row=0, column=1, ipady='3', padx='19')
         rbUser.grid(row=0, column=0, ipady='3', padx='42')
-        inactive_r.grid(row=0, column=0, ipady='3', padx='42')
-        active_r.grid(row=0, column=1, ipady='3', padx='4')
+
         # label layout
         usrname_reg.grid(row=2, column=0, ipady='5', padx='5', sticky='e')
         pass_reg.grid(row=3, column=0, ipady='5', padx='5', sticky='e')
@@ -498,7 +497,7 @@ class MainFrame(tk.Tk):
             index = aya['values'][0]
             ok = mb.askyesno("", "Are you sure do you want to delete?")
             if ok:
-                sql = f"update tbluser set active=3 where User_Id={index}"
+                sql = f"update tbluser set active=0 where User_Id={index}"
                 cursor.execute(sql)
                 db.commit()
                 curItem = self.tree1.focus()
@@ -536,7 +535,7 @@ class MainFrame(tk.Tk):
         ln = self.ln_reg_var.get().strip()
         cn = self.cn_reg_var.get().strip()
         usertype = self.userType.get()
-        status = self.status.get()
+
         for row in data:
             if row[0] == user:
                 unique = False
@@ -545,8 +544,9 @@ class MainFrame(tk.Tk):
                 mb.showerror("", "please fill all fields")
             else:
                 try:
-                    sql = f"insert into tbluser (Uname, Password, Fname, Lname, Contact_no, UserType_Id, active )" \
-                          f"values ('{user}', '{pas_s}', '{fn}','{ln}', '{cn}', '{usertype}', '{status}')"
+
+                    sql = f"insert into tbluser (Uname, Password, Fname, Lname, Contact_no, UserType_Id, active ) " \
+                          f"values ('{user}', '{pas_s}', '{fn}','{ln}', '{cn}', '{usertype}','1')"
                     print(sql)
                     cursor.execute(sql)
                     db.commit()
@@ -558,7 +558,8 @@ class MainFrame(tk.Tk):
                         Display_Data(self.tree1)
                         add_Frame.destroy()
                 except:
-                    mb.showerror("Error Found!", "Contact number contain number only")
+                    mb.showerror("","Contact no contains number only ")
+
         else:
             mb.showerror("", "Username is already taken please try again")
 
